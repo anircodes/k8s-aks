@@ -1,0 +1,37 @@
+# Default values for example-webapp
+replicaCount: 2
+
+image:
+  repository: example-webapp
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: azure/application-gateway
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+  hosts:
+    - host: webapp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    password: "default-password"

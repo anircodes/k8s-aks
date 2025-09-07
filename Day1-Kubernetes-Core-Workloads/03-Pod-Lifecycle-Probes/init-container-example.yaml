@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-demo
+spec:
+  initContainers:
+  - name: wait-for-db
+    image: busybox:1.28
+    command: ['sh', '-c', 'until nslookup mysql; do echo waiting for mysql; sleep 2; done;']
+  - name: init-db
+    image: busybox:1.28
+    command: ['sh', '-c', 'echo "Initializing database..."; sleep 5']
+  containers:
+  - name: app
+    image: nginx:1.20
+    ports:
+    - containerPort: 80

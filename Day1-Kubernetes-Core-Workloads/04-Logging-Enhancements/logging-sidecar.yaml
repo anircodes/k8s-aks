@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app-with-logging
+spec:
+  containers:
+  - name: app
+    image: nginx:1.20
+    volumeMounts:
+    - name: log-storage
+      mountPath: /var/log/app
+  - name: log-collector
+    image: busybox
+    command: ["/bin/sh", "-c", "tail -F /var/log/app/app.log"]
+    volumeMounts:
+    - name: log-storage
+      mountPath: /var/log/app
+  volumes:
+  - name: log-storage
+    emptyDir: {}

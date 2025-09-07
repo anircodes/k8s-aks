@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: three-tier-app
+data:
+  backend_url: "http://backend-service:8080"
+  mongodb_host: "mongodb"
+  mongodb_port: "27017"
+  log_level: "info"

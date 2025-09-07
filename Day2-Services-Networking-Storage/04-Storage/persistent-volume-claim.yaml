@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-disk-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed-premium
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: azure-file-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefile
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage-demo
+spec:
+  containers:
+  - name: app
+    image: nginx
+    volumeMounts:
+    - name: azure-disk
+      mountPath: /mnt/azure-disk
+    - name: azure-file
+      mountPath: /mnt/azure-file
+  volumes:
+  - name: azure-disk
+    persistentVolumeClaim:
+      claimName: azure-disk-claim
+  - name: azure-file
+    persistentVolumeClaim:
+      claimName: azure-file-claim
