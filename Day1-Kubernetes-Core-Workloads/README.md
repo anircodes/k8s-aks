@@ -5,14 +5,14 @@ Day 1 focuses on container fundamentals and Kubernetes core workloads, providing
 
 ## Modules
 
-### 1. AKS Setup (00-AKS-Setup)
+### 1. AKS Setup (01-AKS-Setup)
 - Azure Kubernetes Service setup
 - Cluster configuration
 - Advanced AKS features
 - Troubleshooting guides
 - Prerequisites setup
 
-### 2. Container Basics (00-Container-Basics)
+### 2. Container Basics (02-Container-Basics)
 - Docker fundamentals
 - Container lifecycle
 - Image management
@@ -21,7 +21,7 @@ Day 1 focuses on container fundamentals and Kubernetes core workloads, providing
 - Multi-container applications
 - Hands-on exercises with containers
 
-### 3. Kubernetes Architecture (01-Kubernetes-Architecture)
+### 3. Kubernetes Architecture (03-Kubernetes-Architecture)
 - Core components
 - Control plane architecture
 - Node components
@@ -30,7 +30,7 @@ Day 1 focuses on container fundamentals and Kubernetes core workloads, providing
 - Authentication and authorization
 - Core API concepts
 
-### 4. Workloads & Controllers (02-Workloads-Controllers)
+### 4. Workloads & Controllers (04-Workloads-Controllers)
 - Pod management
 - ReplicaSets
 - Deployments
@@ -39,7 +39,7 @@ Day 1 focuses on container fundamentals and Kubernetes core workloads, providing
 - Jobs and CronJobs
 - Resource management
 
-### 5. Pod Lifecycle & Probes (03-Pod-Lifecycle-Probes)
+### 5. Pod Lifecycle & Probes (05-Pod-Lifecycle-Probes)
 - Pod lifecycle phases
 - Container probes
 - Readiness probes
@@ -48,7 +48,7 @@ Day 1 focuses on container fundamentals and Kubernetes core workloads, providing
 - Init containers
 - Sidecar patterns
 
-### 6. Logging Enhancements (04-Logging-Enhancements)
+### 6. Logging Enhancements (06-Logging-Enhancements)
 - Fluent Bit setup
 - OpenTelemetry integration
 - Log collection
@@ -56,7 +56,7 @@ Day 1 focuses on container fundamentals and Kubernetes core workloads, providing
 - Azure Monitor integration
 - Custom logging patterns
 
-### 7. Mini Project (05-Mini-Project)
+### 7. Mini Project (07-Mini-Project)
 - Three-tier application deployment
 - Azure integration
 - Monitoring setup
