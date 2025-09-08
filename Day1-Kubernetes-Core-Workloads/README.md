@@ -3,6 +3,21 @@
 ## Overview
 Day 1 focuses on container fundamentals and Kubernetes core workloads, providing hands-on experience with basic container operations through to advanced Kubernetes deployments.
 
+## Schedule (8 Hours)
+
+| Time          | Duration | Module                    |
+|---------------|----------|---------------------------|
+| 09:00 - 09:45 | 45m     | AKS Setup & Introduction  |
+| 09:45 - 11:00 | 1h 15m  | Container Basics         |
+| 11:00 - 11:15 | 15m     | Break                    |
+| 11:15 - 12:30 | 1h 15m  | Kubernetes Architecture  |
+| 12:30 - 13:30 | 1h      | Lunch Break             |
+| 13:30 - 14:45 | 1h 15m  | Workloads & Controllers |
+| 14:45 - 15:45 | 1h      | Pod Lifecycle & Probes  |
+| 15:45 - 16:00 | 15m     | Break                   |
+| 16:00 - 16:45 | 45m     | Logging Enhancements    |
+| 16:45 - 18:00 | 1h 15m  | Mini Project           |
+
 ## Modules
 
 ### 1. AKS Setup (01-AKS-Setup)

@@ -1,6 +1,18 @@
-# Setting up A# Installing Required Tools on Windows
+# AKS Setup and Prerequisites
 
-### 1. Install Azure CLI
+## Overview
+This guide covers the setup and configuration of Azure Kubernetes Service (AKS), including resource group creation and required permissions setup.
+
+## Prerequisites
+- Active Azure subscription
+- Azure CLI installed
+- kubectl installed
+- PowerShell/Command Prompt
+- Owner/Contributor access to create Azure resources
+
+## 1. Azure Account Setup and Tools Installation
+
+### Install Azure CLI
 ```batch
 @REM Download and install Azure CLI silently
 curl -o AzureCLI.msi https://aka.ms/installazurecliwindows
@@ -8,6 +20,162 @@ start /wait msiexec.exe /i AzureCLI.msi /quiet
 
 @REM Verify installation
 az --version
+```
+
+### Login and Configure Azure
+```batch
+@REM Login to Azure CLI
+az login
+
+@REM List and select subscription
+az account list --output table
+az account set --subscription "Your-Subscription-Name-or-ID"
+
+@REM Verify selected subscription
+az account show
+```
+
+## 2. Resource Group and Permissions Setup
+
+### Create Resource Group
+```batch
+@REM Create new resource group
+az group create ^
+    --name myAKSResourceGroup ^
+    --location eastus
+
+@REM Verify creation
+az group show --name myAKSResourceGroup
+```
+
+### Create Service Principal
+```batch
+@REM Create Service Principal for AKS
+az ad sp create-for-rbac ^
+    --name myAKSServicePrincipal ^
+    --role Contributor ^
+    --scopes /subscriptions/{subscription-id}/resourceGroups/myAKSResourceGroup
+
+@REM Important: Save the output containing appId and password
+```
+
+### Assign Required Roles
+```batch
+@REM Get your user Object ID
+az ad signed-in-user show --query objectId -o tsv
+
+@REM Assign AKS Cluster Admin Role
+az role assignment create ^
+    --assignee-object-id "<your-object-id>" ^
+    --role "Azure Kubernetes Service Cluster Admin Role" ^
+    --scope /subscriptions/{subscription-id}/resourceGroups/myAKSResourceGroup
+
+@REM Assign Virtual Machine Contributor Role
+az role assignment create ^
+    --assignee-object-id "<your-object-id>" ^
+    --role "Virtual Machine Contributor" ^
+    --scope /subscriptions/{subscription-id}/resourceGroups/myAKSResourceGroup
+
+@REM Assign Network Contributor Role (if using advanced networking)
+az role assignment create ^
+    --assignee-object-id "<service-principal-object-id>" ^
+    --role "Network Contributor" ^
+    --scope /subscriptions/{subscription-id}/resourceGroups/myAKSResourceGroup
+```
+
+## 3. Required Resource Providers
+
+```batch
+@REM Register necessary Azure resource providers
+az provider register --namespace Microsoft.OperationsManagement
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace Microsoft.ContainerService
+az provider register --namespace Microsoft.ContainerRegistry
+
+@REM Monitor registration status
+az provider show -n Microsoft.ContainerService -o table
+```
+
+## 4. Network Configuration (Recommended)
+
+```batch
+@REM Create Virtual Network
+az network vnet create ^
+    --resource-group myAKSResourceGroup ^
+    --name myAKSVnet ^
+    --address-prefixes 10.0.0.0/16 ^
+    --subnet-name myAKSSubnet ^
+    --subnet-prefix 10.0.0.0/24
+
+@REM Create subnet for Application Gateway (if using AGIC)
+az network vnet subnet create ^
+    --resource-group myAKSResourceGroup ^
+    --vnet-name myAKSVnet ^
+    --name myAppGWSubnet ^
+    --address-prefix 10.0.1.0/24
+```
+
+## 5. Security Best Practices
+
+### 1. Role-Based Access Control
+- Use the principle of least privilege
+- Regularly audit role assignments
+- Implement proper RBAC structure
+- Use Azure AD integration
+
+### 2. Network Security
+- Use private clusters when possible
+- Implement network policies
+- Configure proper NSG rules
+- Use Azure Firewall for egress
+
+### 3. Authentication and Authorization
+- Enable Azure AD integration
+- Use managed identities
+- Implement proper RBAC
+- Regular credential rotation
+
+## 6. Verification Checklist
+
+- [ ] Azure CLI installed and configured
+- [ ] Resource group created
+- [ ] Service Principal created and roles assigned
+- [ ] Required resource providers registered
+- [ ] Virtual network configured (if needed)
+- [ ] Security best practices implemented
+- [ ] Access control configured
+
+## 7. Troubleshooting Tips
+
+### Common Issues:
+1. **Permission Errors**
+   ```batch
+   @REM Verify role assignments
+   az role assignment list --assignee "<service-principal-id>"
+   ```
+
+2. **Network Issues**
+   ```batch
+   @REM Check NSG rules
+   az network nsg list --resource-group myAKSResourceGroup
+   ```
+
+3. **Resource Provider Issues**
+   ```batch
+   @REM Check provider status
+   az provider list --query "[].{Provider:namespace, Status:registrationState}" --out table
+   ```
+
+## Next Steps
+- Proceed to AKS cluster creation
+- Configure monitoring
+- Set up CI/CD pipelines
+- Implement backup solutions
+
+## Additional Resources
+- [Azure RBAC Documentation](https://docs.microsoft.com/azure/role-based-access-control/overview)
+- [AKS Best Practices](https://docs.microsoft.com/azure/aks/best-practices)
+- [AKS Networking](https://docs.microsoft.com/azure/aks/concepts-network)
 
 @REM Login to Azure (will open browser window)
 az login
