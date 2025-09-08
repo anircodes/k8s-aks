@@ -1,43 +1,176 @@
 # Pod Lifecycle and Health Management in AKS
 
 ## Overview
-This module covers Pod lifecycle management, health monitoring, and initialization in Azure Kubernetes Service (AKS), including init containers and health probes.
+This module covers Pod lifecycle management, health monitoring, and initialization in Azure Kubernetes Service (AKS), including detailed explanations of pod phases, container states, and health probes.
 
 ## Pod Lifecycle
 
 ### 1. Pod Phases
-- **Pending**
-  - Pod accepted but containers not running
-  - Waiting for scheduling
-  - Downloading images
-- **Running**
-  - Pod bound to node
-  - All containers started
-  - At least one container running
-- **Succeeded**
-  - All containers terminated successfully
-  - No restart policy
-- **Failed**
-  - All containers terminated
-  - At least one container failed
-- **Unknown**
-  - Pod state cannot be obtained
-  - Usually node communication issues
+```
+┌──────────────────────────────────────────────────────┐
+│                     Pod Lifecycle                    │
+│                                                      │
+│  ┌─────────┐    ┌─────────┐    ┌──────────┐        │
+│  │ Pending │───►│ Running │───►│Succeeded │        │
+│  └─────────┘    └─────────┘    └──────────┘        │
+│       │              │              ▲               │
+│       │              │              │               │
+│       │              ▼              │               │
+│       └────────►┌─────────┐        │               │
+│                 │ Failed  │◄────────┘               │
+│                 └─────────┘                         │
+│                     ▲                               │
+│                     │                               │
+│                 ┌─────────┐                         │
+│                 │Unknown  │                         │
+│                 └─────────┘                         │
+└──────────────────────────────────────────────────────┘
+```
+
+**Phase Transitions:**
+1. **Pending → Running**
+   ```
+   ┌─────────────┐
+   │  Pending    │
+   │ ┌─────────┐ │
+   │ │Schedule │ │    ┌─────────────┐
+   │ └────┬────┘ │    │  Running    │
+   │      │      │    │ ┌─────────┐ │
+   │ ┌────┴────┐ │    │ │Container│ │
+   │ │Pull IMG │ ├───►│ │Starting │ │
+   │ └─────────┘ │    │ └─────────┘ │
+   └─────────────┘    └─────────────┘
+   ```
+
+2. **Running → Succeeded/Failed**
+   - **Succeeded:** All containers completed successfully
+   - **Failed:** At least one container terminated with error
+   - **Unknown:** Node communication lost
+
+**Detailed Phase Descriptions:**
+
+1. **Pending Phase**
+   - Pod accepted by Kubernetes system
+   - Awaiting scheduling decision
+   - Resource allocation in progress
+   - Image downloads in progress
+   - Volume mounting preparation
+
+2. **Running Phase**
+   - Pod bound to specific node
+   - All containers created
+   - At least one container active
+   - Services can route traffic
+   - Ready for workload
+
+3. **Succeeded Phase**
+   - All containers completed successfully
+   - Typically for jobs/batch processes
+   - No container restarts needed
+   - Resources can be reclaimed
+
+4. **Failed Phase**
+   - All containers terminated
+   - At least one failed with error
+   - May trigger restart based on policy
+   - Logs available for debugging
+
+5. **Unknown Phase**
+   - Node communication lost
+   - Control plane can't determine state
+   - Requires investigation
+   - May need manual intervention
 
 ### 2. Container States
-- **Waiting**
-  - Not running but expected to run
-  - Image pulling
-  - Dependencies starting
-- **Running**
-  - Executing without issues
-  - Regular operation
-- **Terminated**
-  - Completed execution
-  - Failed with error
-  - Container exited
+```
+┌──────────────────────────────────────────────────┐
+│               Container States                    │
+│                                                  │
+│    ┌─────────┐      ┌─────────┐                 │
+│    │ Waiting │─────►│Running  │                 │
+│    └─────────┘      └─────────┘                 │
+│         │                │                       │
+│         │                │                       │
+│         ▼                ▼                       │
+│    ┌──────────────────────┐                     │
+│    │     Terminated       │                     │
+│    └──────────────────────┘                     │
+└──────────────────────────────────────────────────┘
+```
+
+**State Details:**
+
+1. **Waiting State**
+   ```
+   ┌─────────────────┐
+   │    Waiting      │
+   │  ┌──────────┐   │
+   │  │Pull Image│   │
+   │  └──────────┘   │
+   │  ┌──────────┐   │
+   │  │Init Deps │   │
+   │  └──────────┘   │
+   └─────────────────┘
+   ```
+   - Container creation in progress
+   - Resource allocation
+   - Image pulling
+   - Volume mounting
+   - Dependency resolution
+
+2. **Running State**
+   ```
+   ┌─────────────────┐
+   │    Running      │
+   │  ┌──────────┐   │
+   │  │Process   │   │
+   │  │ Active   │   │
+   │  └──────────┘   │
+   │  ┌──────────┐   │
+   │  │Resources │   │
+   │  │Allocated │   │
+   │  └──────────┘   │
+   └─────────────────┘
+   ```
+   - Process executing
+   - Resources allocated
+   - Network ready
+   - Volumes mounted
+   - Logs available
+
+3. **Terminated State**
+   ```
+   ┌─────────────────┐
+   │   Terminated    │
+   │  ┌──────────┐   │
+   │  │Exit Code │   │
+   │  └──────────┘   │
+   │  ┌──────────┐   │
+   │  │Reason    │   │
+   │  └──────────┘   │
+   └─────────────────┘
+   ```
+   - Process completed
+   - Resources released
+   - Exit code available
+   - Restart policy applies
 
 ## Health Monitoring
+
+### Container Probes Overview
+```
+┌───────────────────────────────────────────────────────┐
+│                   Container Probes                     │
+│                                                       │
+│  ┌────────────┐   ┌─────────────┐   ┌─────────────┐  │
+│  │  Startup   │   │  Liveness   │   │ Readiness   │  │
+│  │   Probe    │──►│   Probe     │──►│   Probe     │  │
+│  └────────────┘   └─────────────┘   └─────────────┘  │
+│        │                │                  │          │
+│    Container      Application         Service         │
+│     Started         Health            Traffic         │
+└───────────────────────────────────────────────────────┘
+```
 
 ### 1. Liveness Probe
 ```yaml
@@ -53,10 +186,23 @@ spec:
       httpGet:
         path: /health
         port: 8080
-      initialDelaySeconds: 15
-      periodSeconds: 10
-      timeoutSeconds: 5
-      failureThreshold: 3
+      initialDelaySeconds: 15  # Wait before first probe
+      periodSeconds: 10        # Frequency of probe
+      timeoutSeconds: 5        # Probe timeout
+      failureThreshold: 3      # Failures before restart
+```
+
+**Liveness Probe Flow:**
+```
+┌─────────────┐    ┌──────────┐    ┌──────────┐
+│  HTTP GET   │    │ Success  │    │Container │
+│  /health   ├───►│ 200-399  ├───►│ Continues│
+└─────────────┘    └──────────┘    └──────────┘
+      │                                  ▲
+      │           ┌──────────┐    ┌──────────┐
+      └──────────►│  Fail    │    │Container │
+                 │ 3 times   ├───►│ Restarts │
+                 └──────────┘    └──────────┘
 ```
 
 ### 2. Readiness Probe
@@ -71,9 +217,22 @@ spec:
     image: myapp:1.0
     readinessProbe:
       tcpSocket:
-        port: 8080
+        port: 8080      # Check if port is open
       initialDelaySeconds: 5
-      periodSeconds: 10
+      periodSeconds: 10  # Check every 10 seconds
+```
+
+**Readiness Probe Flow:**
+```
+┌─────────────┐    ┌──────────┐    ┌──────────┐
+│   TCP       │    │ Port     │    │ Add to   │
+│  Check     ├───►│  Open    ├───►│ Service  │
+└─────────────┘    └──────────┘    └──────────┘
+      │                                  ▲
+      │           ┌──────────┐    ┌──────────┐
+      └──────────►│  Port    │    │Remove from│
+                 │  Closed   ├───►│ Service  │
+                 └──────────┘    └──────────┘
 ```
 
 ### 3. Startup Probe
@@ -90,8 +249,21 @@ spec:
       httpGet:
         path: /startup
         port: 8080
-      failureThreshold: 30
-      periodSeconds: 10
+      failureThreshold: 30    # Allow up to 5 minutes (30 * 10s)
+      periodSeconds: 10       # Check every 10 seconds
+```
+
+**Startup Probe Flow:**
+```
+┌─────────────┐    ┌──────────┐    ┌──────────┐
+│  HTTP GET   │    │ Success  │    │Enable    │
+│  /startup  ├───►│ 200-399  ├───►│Other     │
+└─────────────┘    └──────────┘    │Probes    │
+      │                            └──────────┘
+      │           ┌──────────┐    ┌──────────┐
+      └──────────►│  Fail    │    │Container │
+                 │ 30 times  ├───►│ Fails    │
+                 └──────────┘    └──────────┘
 ```
 
 ## Init Containers
