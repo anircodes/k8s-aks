@@ -1,16 +1,16 @@
 # Create Production AKS Cluster
-az aks create \
-    --resource-group myResourceGroup \
-    --name myAKSCluster \
-    --node-count 3 \
-    --enable-addons monitoring,http_application_routing \
-    --enable-managed-identity \
-    --enable-cluster-autoscaler \
-    --min-count 3 \
-    --max-count 6 \
-    --network-plugin azure \
-    --network-policy azure \
-    --zones 1 2 3 \
+az aks create `
+    --resource-group myResourceGroup `
+    --name myAKSCluster `
+    --node-count 3 `
+    --enable-addons monitoring,http_application_routing `
+    --enable-managed-identity `
+    --enable-cluster-autoscaler `
+    --min-count 3 `
+    --max-count 6 `
+    --network-plugin azure `
+    --network-policy azure `
+    --zones 1 2 3 `
     --generate-ssh-keys
 
 # Get AKS Credentials with admin access

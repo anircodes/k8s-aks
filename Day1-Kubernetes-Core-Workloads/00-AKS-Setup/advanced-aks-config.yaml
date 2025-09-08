@@ -1,76 +1,111 @@
+# Production-grade AKS cluster configuration
+# This configuration includes enterprise features and best practices
+
 apiVersion: v1
-kind: Cluster
+kind: Cluster                      # Resource type
 metadata:
-  name: myAKSCluster-prod
+  name: myAKSCluster-prod         # Cluster name (must be unique within resource group)
+  labels:                         # Labels for cluster organization
+    environment: production
+    costCenter: "12345"
+    department: "engineering"
 spec:
-  resourceGroup: myResourceGroup
-  location: eastus2
+  # Basic cluster configuration
+  resourceGroup: myResourceGroup   # Azure Resource Group where cluster will be created
+  location: eastus2               # Azure region (choose based on your requirements)
   kubernetes:
-    version: 1.26.6
-  nodeResourceGroup: aks-nodes-rg-prod
+    version: 1.26.6              # Kubernetes version (check available versions with 'az aks get-versions')
+  
+  # Resource group for node resources (VMs, disks, etc.)
+  nodeResourceGroup: aks-nodes-rg-prod  # Separate resource group for node resources
+  # System node pool configuration (runs critical system pods)
   defaultNodePool:
-    name: systempool
-    count: 3
-    vmSize: Standard_DS4_v2
-    type: VirtualMachineScaleSets
-    availabilityZones:
+    name: systempool              # Name of the system node pool
+    count: 3                     # Initial node count
+    vmSize: Standard_DS4_v2      # VM size (affects CPU, memory, and IOPS)
+    type: VirtualMachineScaleSets # Use VMSS for better scaling and management
+    
+    # High Availability Configuration
+    availabilityZones:           # Deploy across multiple zones for resilience
     - 1
     - 2
     - 3
-    enableAutoScaling: true
-    minCount: 3
-    maxCount: 5
-    osDiskSizeGB: 128
-    osDiskType: Managed
-    maxPods: 110
+    
+    # Auto-scaling Configuration
+    enableAutoScaling: true      # Enable automatic scaling based on demand
+    minCount: 3                  # Minimum number of nodes
+    maxCount: 5                  # Maximum number of nodes
+    
+    # Storage Configuration
+    osDiskSizeGB: 128           # OS disk size for each node
+    osDiskType: Managed         # Use Azure Managed Disks
+    maxPods: 110                # Maximum pods per node (important for CNI)
+  # Additional node pools for user workloads
   additionalNodePools:
-  - name: userpool1
-    count: 3
-    vmSize: Standard_DS4_v2
-    mode: User
-    availabilityZones:
+  - name: userpool1              # Name of the user node pool
+    count: 3                     # Initial node count
+    vmSize: Standard_DS4_v2      # VM size for user workloads
+    mode: User                   # User mode (doesn't run system pods)
+    
+    # High Availability Configuration
+    availabilityZones:           # Multi-zone deployment
     - 1
     - 2
     - 3
-    enableAutoScaling: true
-    minCount: 3
-    maxCount: 10
-    maxPods: 110
-    osDiskSizeGB: 128
-    osDiskType: Managed
+    
+    # Auto-scaling for user workloads
+    enableAutoScaling: true      # Enable auto-scaling
+    minCount: 3                  # Minimum nodes
+    maxCount: 10                 # Maximum nodes (higher than system pool)
+    maxPods: 110                # Maximum pods per node
+    
+    # Storage Configuration
+    osDiskSizeGB: 128           # OS disk size
+    osDiskType: Managed         # Use managed disks
   identity:
     type: SystemAssigned
+  # Network Configuration
   networkProfile:
-    networkPlugin: azure
-    networkPolicy: azure
-    serviceCidr: 10.0.0.0/16
-    dnsServiceIP: 10.0.0.10
-    dockerBridgeCidr: 172.17.0.1/16
-    loadBalancerSku: standard
+    networkPlugin: azure         # Use Azure CNI for advanced networking features
+    networkPolicy: azure        # Enable Azure Network Policy
+    serviceCidr: 10.0.0.0/16   # IP range for Kubernetes services
+    dnsServiceIP: 10.0.0.10    # IP address for Kubernetes DNS service
+    dockerBridgeCidr: 172.17.0.1/16  # Docker bridge network address
+    loadBalancerSku: standard   # Use standard load balancer for better features
+  # Azure Add-ons Configuration
   addons:
-    httpApplicationRouting:
+    # Basic add-ons
+    httpApplicationRouting:      # Enable HTTP application routing
       enabled: true
-    omsagent:
+    omsagent:                   # Enable Azure Monitor for containers
       enabled: true
-    azurePolicy:
+    azurePolicy:                # Enable Azure Policy for Kubernetes
       enabled: true
+      
+    # Application Gateway Ingress Controller
     ingressApplicationGateway:
       enabled: true
       config:
         applicationGatewayId: "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Network/applicationGateways/<gateway-name>"
-    azureKeyvaultSecretsProvider:
+    
+    # Azure Key Vault integration
+    azureKeyvaultSecretsProvider:  # Enable Key Vault secrets
       enabled: true
+  # Azure Active Directory Integration
   aadProfile:
-    managed: true
-    enableAzureRBAC: true
-    adminGroupObjectIDs:
+    managed: true              # Use Azure AD-managed authentication
+    enableAzureRBAC: true      # Enable Azure RBAC for Kubernetes
+    adminGroupObjectIDs:       # Azure AD groups with admin access
     - "<admin-group-object-id>"
+  # Monitoring and Backup Configuration
   monitoring:
-    logAnalytics:
+    logAnalytics:              # Azure Log Analytics integration
       enabled: true
       workspaceResourceID: "/subscriptions/<subscription-id>/resourcegroups/<resource-group>/providers/microsoft.operationalinsights/workspaces/<workspace-name>"
+  
+  # Backup Configuration using Velero
   backup:
-    enabled: true
-    velero:
-      schedule: "0 */6 * * *"
-      ttl: "720h"
+    enabled: true             # Enable cluster backup
+    velero:                   # Velero backup configuration
+      schedule: "0 */6 * * *" # Backup every 6 hours
+      ttl: "720h"            # Keep backups for 30 days
