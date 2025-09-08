@@ -1,29 +1,31 @@
 # Setting up A# Installing Required Tools on Windows
 
 ### 1. Install Azure CLI
-```powershell
-# Download the MSI installer
-$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
+```batch
+@REM Download and install Azure CLI silently
+curl -o AzureCLI.msi https://aka.ms/installazurecliwindows
+start /wait msiexec.exe /i AzureCLI.msi /quiet
 
-# Verify installation
+@REM Verify installation
 az --version
 
-# Login to Azure (will open browser window)
+@REM Login to Azure (will open browser window)
 az login
 
-# Set subscription
+@REM Set subscription
 az account set --subscription <subscription-id>
 ```
 
 ### 2. Install kubectl
-```powershell
-# Install via Azure CLI
+```batch
+@REM Install via Azure CLI
 az aks install-cli
 
-# Add kubectl to PATH if not already added
-# The path should be similar to: C:\Users\<username>\.azure-kubectl
+@REM Add kubectl to PATH if not already added
+@REM Example of adding to PATH (run in administrator command prompt)
+setx path "%path%;C:\Users\%USERNAME%\.azure-kubectl"
 
-# Verify installation
+@REM Verify installation
 kubectl version --client
 ```
 
@@ -33,14 +35,13 @@ kubectl version --client
 - Click Install
 
 ### 4. Install VSCode (Recommended)
-```powershell
-# Install using winget
+```batch
+@REM Install using winget
 winget install Microsoft.VisualStudioCode
 
-# Install useful extensions
+@REM Install useful extensions
 code --install-extension ms-kubernetes-tools.vscode-kubernetes-tools
 code --install-extension ms-azuretools.vscode-azurerm-tools
-code --install-extension ms-vscode.powershell
 ``` Service (AKS)
 
 ## Overview
@@ -60,8 +61,7 @@ This module covers the setup and configuration of Azure Kubernetes Service (AKS)
 3. Visual Studio Code with extensions:
    - Kubernetes
    - Azure Resource Manager Tools
-   - PowerShell
-4. PowerShell 7.x (recommended)
+4. Command Prompt (cmd.exe)
 
 ### Azure Requirements
 1. Azure subscription
@@ -70,8 +70,7 @@ This module covers the setup and configuration of Azure Kubernetes Service (AKS)
 
 ### Network Requirements
 1. Ability to connect to Azure (check corporate proxy settings if needed)
-2. PowerShell execution policy that allows running scripts
-3. Administrative access for tool installation
+2. Administrative access for tool installation
 
 ## Practical Exercises
 
