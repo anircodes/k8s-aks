@@ -166,11 +166,208 @@ az network vnet subnet create ^
    az provider list --query "[].{Provider:namespace, Status:registrationState}" --out table
    ```
 
+## AKS Components and Architecture
+
+### 1. Control Plane Components
+- **API Server**: Entry point for all REST commands
+- **etcd**: Distributed key-value store for cluster data
+- **Scheduler**: Determines pod placement
+- **Controller Manager**: Manages various controllers
+  - Node Controller
+  - Replication Controller
+  - Endpoints Controller
+  - Service Account & Token Controllers
+
+### 2. Node Components
+- **Kubelet**: Node agent that runs on each node
+- **Container Runtime**: Docker/containerd
+- **Kube-proxy**: Network proxy and load balancer
+- **Azure CNI**: Network plugin for Azure integration
+
+### 3. Azure-Specific Components
+- **Cloud Controller Manager**: Manages Azure-specific resources
+- **Azure CNI**: Network plugin for Azure integration
+- **Azure Disk/File CSI**: Storage drivers
+- **Azure Load Balancer**: External load balancing
+- **Application Gateway**: Ingress controller (optional)
+
+### 4. Add-ons and Extensions
+- **Azure Monitor**: Monitoring and logging
+- **Azure Policy**: Governance and compliance
+- **Azure Container Registry**: Container image storage
+- **Azure Key Vault**: Secrets management
+- **Virtual Node**: Serverless containers with ACI
+
+## Practice Tasks and Solutions
+
+### Task 1: Create Resource Group and Configure RBAC
+```batch
+@REM Create resource group
+az group create --name aks-practice-rg --location eastus
+
+@REM Create AAD group for AKS admins
+az ad group create --display-name aks-admins --mail-nickname aks-admins
+
+@REM Get the AAD group object ID
+$GROUP_ID=$(az ad group show --group aks-admins --query objectId -o tsv)
+
+@REM Assign RBAC role
+az role assignment create ^
+    --assignee-object-id $GROUP_ID ^
+    --role "Azure Kubernetes Service Cluster Admin Role" ^
+    --scope /subscriptions/{subscription-id}/resourceGroups/aks-practice-rg
+```
+
+### Task 2: Configure Networking
+```batch
+@REM Create VNET and Subnets
+az network vnet create ^
+    --name aks-vnet ^
+    --resource-group aks-practice-rg ^
+    --address-prefixes 10.0.0.0/16
+
+@REM Create AKS subnet
+az network vnet subnet create ^
+    --name aks-subnet ^
+    --resource-group aks-practice-rg ^
+    --vnet-name aks-vnet ^
+    --address-prefixes 10.0.1.0/24
+
+@REM Create Application Gateway subnet
+az network vnet subnet create ^
+    --name appgw-subnet ^
+    --resource-group aks-practice-rg ^
+    --vnet-name aks-vnet ^
+    --address-prefixes 10.0.2.0/24
+```
+
+### Task 3: Set Up Monitoring
+```batch
+@REM Create Log Analytics workspace
+az monitor log-analytics workspace create ^
+    --resource-group aks-practice-rg ^
+    --workspace-name aks-logs ^
+    --location eastus
+
+@REM Get workspace ID
+$WORKSPACE_ID=$(az monitor log-analytics workspace show ^
+    --resource-group aks-practice-rg ^
+    --workspace-name aks-logs ^
+    --query id -o tsv)
+```
+
+### Task 4: Create AKS Cluster
+```batch
+@REM Create AKS cluster with monitoring
+az aks create ^
+    --resource-group aks-practice-rg ^
+    --name practice-cluster ^
+    --node-count 3 ^
+    --enable-addons monitoring ^
+    --enable-managed-identity ^
+    --network-plugin azure ^
+    --vnet-subnet-id $SUBNET_ID ^
+    --workspace-resource-id $WORKSPACE_ID ^
+    --enable-aad ^
+    --aad-admin-group-object-ids $GROUP_ID ^
+    --generate-ssh-keys
+
+@REM Get credentials
+az aks get-credentials ^
+    --resource-group aks-practice-rg ^
+    --name practice-cluster ^
+    --admin
+```
+
+### Task 5: Verify Setup
+```batch
+@REM Check node status
+kubectl get nodes -o wide
+
+@REM Verify pods in kube-system
+kubectl get pods -n kube-system
+
+@REM Check monitoring
+kubectl get pods -n azure-monitor
+
+@REM Test deployment
+kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80 --type=LoadBalancer
+```
+
+### Common Practice Task Issues and Solutions
+
+1. **Issue: RBAC Permission Errors**
+   ```batch
+   @REM Verify role assignments
+   az role assignment list --assignee-object-id $GROUP_ID -o table
+   
+   @REM Add missing roles if needed
+   az role assignment create --assignee-object-id $GROUP_ID --role "Contributor"
+   ```
+
+2. **Issue: Network Connectivity**
+   ```batch
+   @REM Check NSG rules
+   az network nsg list -g aks-practice-rg -o table
+   
+   @REM Verify subnet configuration
+   az network vnet subnet show ^
+       --resource-group aks-practice-rg ^
+       --vnet-name aks-vnet ^
+       --name aks-subnet
+   ```
+
+3. **Issue: Monitoring Not Working**
+   ```batch
+   @REM Check Log Analytics agent
+   kubectl get ds omsagent --namespace=kube-system
+   
+   @REM View agent logs
+   kubectl logs -n kube-system -l component=oms-agent
+   ```
+
+### Advanced Practice Scenarios
+
+1. **Multi-node Pool Setup**
+```batch
+@REM Add new node pool
+az aks nodepool add ^
+    --resource-group aks-practice-rg ^
+    --cluster-name practice-cluster ^
+    --name gpupool ^
+    --node-count 3 ^
+    --node-vm-size Standard_DS3_v2
+```
+
+2. **Auto-scaling Configuration**
+```batch
+@REM Enable cluster autoscaler
+az aks update ^
+    --resource-group aks-practice-rg ^
+    --name practice-cluster ^
+    --enable-cluster-autoscaler ^
+    --min-count 1 ^
+    --max-count 5
+```
+
+3. **Private Cluster Setup**
+```batch
+@REM Create private cluster
+az aks create ^
+    --resource-group aks-practice-rg ^
+    --name private-cluster ^
+    --enable-private-cluster ^
+    --enable-managed-identity ^
+    --network-plugin azure ^
+    --vnet-subnet-id $SUBNET_ID
+```
+
 ## Next Steps
-- Proceed to AKS cluster creation
-- Configure monitoring
+- Proceed to Container Basics
 - Set up CI/CD pipelines
 - Implement backup solutions
+- Practice advanced scenarios
 
 ## Additional Resources
 - [Azure RBAC Documentation](https://docs.microsoft.com/azure/role-based-access-control/overview)
