@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Cluster
+metadata:
+  name: myAKSCluster
+spec:
+  resourceGroup: myResourceGroup
+  location: eastus2
+  kubernetes:
+    version: 1.26.6
+  nodeResourceGroup: aks-nodes-rg
+  defaultNodePool:
+    name: systempool
+    count: 3
+    vmSize: Standard_DS3_v2
+    type: VirtualMachineScaleSets
+    availabilityZones:
+    - 1
+    - 2
+    - 3
+    enableAutoScaling: true
+    minCount: 3
+    maxCount: 5
+  identity:
+    type: SystemAssigned
+  networkProfile:
+    networkPlugin: azure
+    networkPolicy: azure
+    serviceCidr: 10.0.0.0/16
+    dnsServiceIP: 10.0.0.10
+    dockerBridgeCidr: 172.17.0.1/16
+  addons:
+    httpApplicationRouting:
+      enabled: true
+    omsagent:
+      enabled: true
+    azurePolicy:
+      enabled: true
+    ingressApplicationGateway:
+      enabled: true
+  aadProfile:
+    managed: true
+    enableAzureRBAC: true
+    adminGroupObjectIDs:
+    - "<admin-group-object-id>"

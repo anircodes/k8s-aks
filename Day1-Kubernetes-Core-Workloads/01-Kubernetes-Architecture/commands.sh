@@ -1,31 +1,45 @@
-# Create AKS Cluster
+# Create Production AKS Cluster
 az aks create \
     --resource-group myResourceGroup \
     --name myAKSCluster \
     --node-count 3 \
-    --enable-addons monitoring \
+    --enable-addons monitoring,http_application_routing \
+    --enable-managed-identity \
+    --enable-cluster-autoscaler \
+    --min-count 3 \
+    --max-count 6 \
+    --network-plugin azure \
+    --network-policy azure \
+    --zones 1 2 3 \
     --generate-ssh-keys
 
-# Get AKS Credentials
-az aks get-credentials --resource-group myResourceGroup --name myAKSCluster
+# Get AKS Credentials with admin access
+az aks get-credentials --resource-group myResourceGroup --name myAKSCluster --admin
 
-# View Cluster Components
-kubectl get nodes -o wide
+# View AKS-specific Components
+az aks show -g myResourceGroup -n myAKSCluster
+kubectl get nodes -o wide --show-labels
 kubectl get pods -n kube-system
-kubectl get componentstatuses
+az aks nodepool list --resource-group myResourceGroup --cluster-name myAKSCluster
 
-# Node Management
-kubectl drain <node-name> --ignore-daemonsets
+# AKS Node Management
+# Cordon and drain node for maintenance
+az aks nodepool update --resource-group myResourceGroup --cluster-name myAKSCluster --name systempool --enable-cluster-autoscaler --min-count 3 --max-count 5
+kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
 kubectl cordon <node-name>
 kubectl uncordon <node-name>
 
-# Health Checks
+# AKS Health Checks
+az aks show -g myResourceGroup -n myAKSCluster --query 'provisioningState'
 kubectl get events --all-namespaces
 kubectl describe node <node-name>
-kubectl logs -n kube-system <pod-name>
+az aks show -g myResourceGroup -n myAKSCluster --query 'powerState'
 
-# View API Server Status
-curl -k https://localhost:6443/healthz
+# Azure Monitor Logs
+az monitor log-analytics workspace list --resource-group myResourceGroup
+kubectl logs -n kube-system -l component=oms-agent
+kubectl logs -n kube-system -l k8s-app=kube-proxy
 
-# View System Pod Logs
-kubectl logs -n kube-system <pod-name> --tail=100
+# Check Azure CNI and Network Policy
+kubectl get networkpolicies --all-namespaces
+az network vnet subnet show -g myResourceGroup --vnet-name myAKSVNet -n myAKSSubnet

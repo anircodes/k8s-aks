@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Cluster
+metadata:
+  name: myAKSCluster-prod
+spec:
+  resourceGroup: myResourceGroup
+  location: eastus2
+  kubernetes:
+    version: 1.26.6
+  nodeResourceGroup: aks-nodes-rg-prod
+  defaultNodePool:
+    name: systempool
+    count: 3
+    vmSize: Standard_DS4_v2
+    type: VirtualMachineScaleSets
+    availabilityZones:
+    - 1
+    - 2
+    - 3
+    enableAutoScaling: true
+    minCount: 3
+    maxCount: 5
+    osDiskSizeGB: 128
+    osDiskType: Managed
+    maxPods: 110
+  additionalNodePools:
+  - name: userpool1
+    count: 3
+    vmSize: Standard_DS4_v2
+    mode: User
+    availabilityZones:
+    - 1
+    - 2
+    - 3
+    enableAutoScaling: true
+    minCount: 3
+    maxCount: 10
+    maxPods: 110
+    osDiskSizeGB: 128
+    osDiskType: Managed
+  identity:
+    type: SystemAssigned
+  networkProfile:
+    networkPlugin: azure
+    networkPolicy: azure
+    serviceCidr: 10.0.0.0/16
+    dnsServiceIP: 10.0.0.10
+    dockerBridgeCidr: 172.17.0.1/16
+    loadBalancerSku: standard
+  addons:
+    httpApplicationRouting:
+      enabled: true
+    omsagent:
+      enabled: true
+    azurePolicy:
+      enabled: true
+    ingressApplicationGateway:
+      enabled: true
+      config:
+        applicationGatewayId: "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Network/applicationGateways/<gateway-name>"
+    azureKeyvaultSecretsProvider:
+      enabled: true
+  aadProfile:
+    managed: true
+    enableAzureRBAC: true
+    adminGroupObjectIDs:
+    - "<admin-group-object-id>"
+  monitoring:
+    logAnalytics:
+      enabled: true
+      workspaceResourceID: "/subscriptions/<subscription-id>/resourcegroups/<resource-group>/providers/microsoft.operationalinsights/workspaces/<workspace-name>"
+  backup:
+    enabled: true
+    velero:
+      schedule: "0 */6 * * *"
+      ttl: "720h"

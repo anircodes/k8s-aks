@@ -1,21 +1,23 @@
-# Kubernetes Architecture
+# AKS Architecture
 
 ## Overview
-This module covers the fundamental components of Kubernetes architecture, including nodes, pods, kubelet, and control plane components.
+This module covers the Azure Kubernetes Service (AKS) architecture, including Azure-managed components, nodes, pods, and integration points.
 
 ## Core Components
 
-### Control Plane Components
-- **kube-apiserver**: The API server that serves as the front end for the Kubernetes control plane
-- **etcd**: Consistent and highly-available key value store for cluster data
-- **kube-scheduler**: Component that watches for newly created Pods and assigns them to nodes
-- **kube-controller-manager**: Runs controller processes
-- **cloud-controller-manager**: Integrates with underlying cloud providers
+### Azure-Managed Control Plane
+- **kube-apiserver**: Azure-managed API server with high availability
+- **etcd**: Fully managed and backed up by Azure
+- **kube-scheduler**: Azure-managed Pod scheduling
+- **kube-controller-manager**: Azure-managed controller operations
+- **cloud-controller-manager**: Handles Azure-specific integrations
 
-### Node Components
-- **kubelet**: Agent that runs on each node
-- **kube-proxy**: Network proxy that maintains network rules
-- **Container runtime**: Software responsible for running containers
+### AKS Node Components
+- **kubelet**: Azure-managed agent on each node
+- **kube-proxy**: Azure CNI-integrated network proxy
+- **containerd**: Azure-supported container runtime
+- **Azure CNI**: Advanced networking for Azure integration
+- **monitoring agent**: Azure Monitor for containers integration
 
 ## Practical Exercises
 
