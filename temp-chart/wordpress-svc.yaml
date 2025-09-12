@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "my-app.fullname" . | printf "%s-%s"  "-svc-wordpress" }}
+  name: {{ include "my-app.fullname" . | printf "%s-%s"  "svc-wordpress" }}
   namespace: {{ .Release.Namespace }}
 spec:
   type: {{ .Values.wordpress.service.type }}
