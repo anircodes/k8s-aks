@@ -48,7 +48,7 @@ spec:
                   name: {{ include "my-app.fullname" . | printf "%s-%s"  "secret-wordpress" }}
                   key: mysql-database
           ports:
-            - containerPort: {{  .Values.wordpress.port }}
+            - containerPort: {{  .Values.wordpress.service.containerPort }}
               name: wordpress
           volumeMounts:
             - name:  {{ include "my-app.fullname" . | printf "%s-%s"  "persistent-storage" }}
