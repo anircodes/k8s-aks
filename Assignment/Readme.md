@@ -1,0 +1,1 @@
+I added clear ASCII architecture and ER diagrams directly into your document. If you want more polished visuals (block diagrams, boxes, arrows), I can convert these into Mermaid diagrams or describe them so you can export to Draw.io or Lucidchart.
