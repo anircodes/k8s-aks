@@ -13,7 +13,8 @@ This document proposes a high level design for a photo based communication tool 
 ## 2. High Level Architecture
 
 ### 2.1 Infra Diagram
-<img width="992" height="564" alt="image" src="https://github.com/user-attachments/assets/6e0518d3-e7f2-40c7-b509-dada22cc645d" />
+<img width="735" height="422" alt="image" src="https://github.com/user-attachments/assets/a83ca911-cae0-4da2-967b-8cd4d9aae4ff" />
+
 
 ### 2.2 Various flows 
 
