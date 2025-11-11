@@ -99,28 +99,11 @@ The location of the circle as pixel along with radius is given to web server
 
 ## 4. Data Model 
 
-### Entities
-
-* **User**
-* **Photo**
-* **Annotation**
-* **Thread**
-* **Message**
 
 ### ER Structure
 
-* User (1) — (N) Thread
-* Thread (1) — (N) Message
-* Photo (1) — (N) Annotation
-* Annotation (1) — (1) Thread (optional if each annotation opens a thread)
+<img width="695" height="667" alt="image" src="https://github.com/user-attachments/assets/a2fa2d45-5c8c-4871-bcf7-87d9ae4b282a" />
 
-**Photo**: id, s3_url, uploaded_by, created_at
-
-**Annotation**: id, photo_id, type, coordinates, created_by
-
-**Thread**: id, annotation_id, created_by
-
-**Message**: id, thread_id, body, created_by, created_at
 
 ## 5. Key Design Decisions
 
